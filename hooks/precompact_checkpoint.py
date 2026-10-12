@@ -46,6 +46,35 @@ SYNTHETIC = (
 )
 
 
+# Secrets typed into a prompt or a shell command would otherwise be copied into the checkpoint.
+# Best effort: blank the value of anything shaped like a key, token or password. The file is
+# also written owner-only (0600) in an owner-only folder (0700).
+REDACT = [
+    (re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----", re.S), "[REDACTED PRIVATE KEY]"),
+    (re.compile(r"(?i)\b(bearer|basic)\s+[A-Za-z0-9._~+/=-]{8,}"), r"\1 [REDACTED]"),
+    (re.compile(r"\b(sk-[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}"
+                r"|AKIA[0-9A-Z]{16}|xox[abposr]-[A-Za-z0-9-]{10,}|AIza[0-9A-Za-z_-]{30,})"), "[REDACTED]"),
+    (re.compile(r"(://[^/\s:@]+:)[^@\s/]+@"), r"\1[REDACTED]@"),
+    (re.compile(r"(?i)\b([A-Za-z0-9_]*(?:password|passwd|secret|token|api[_-]?key|access[_-]?key|private[_-]?key)"
+                r"[A-Za-z0-9_]*)(\s*[=:]\s*|\s+--?\S*=)(['\"]?)[^\s'\"]+\3"), r"\1\2\3[REDACTED]\3"),
+]
+
+
+def redact(text):
+    for pat, rep in REDACT:
+        text = pat.sub(rep, text)
+    return text
+
+
+def write_private(path, body):
+    """Atomic, owner-only (0600) write: SessionStart never reads a half-written file."""
+    tmp = path + ".tmp"
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(body)
+    os.replace(tmp, path)
+
+
 def is_real_instruction(text):
     return bool(text) and not text.lstrip().startswith(SYNTHETIC)
 
@@ -192,7 +221,7 @@ def main():
     d = json.load(sys.stdin)
     sid = str(d.get("session_id") or "unknown").replace("/", "_")
     directory = cfg.checkpoint_dir()
-    os.makedirs(directory, exist_ok=True)
+    os.makedirs(directory, mode=0o700, exist_ok=True)
     # Count first: the counter must advance even if the transcript is missing or unreadable.
     try:
         bump_counter(directory, sid)
@@ -200,12 +229,8 @@ def main():
         pass
     tp = d.get("transcript_path")
     if tp and os.path.exists(tp):
-        body = render(d, first_instruction(tp), *harvest(read_tail(tp)))
-        dest = os.path.join(directory, f"{sid}.md")
-        tmp = dest + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
-            f.write(body)
-        os.replace(tmp, dest)  # atomic: SessionStart never reads a half-written file
+        body = redact(render(d, first_instruction(tp), *harvest(read_tail(tp))))
+        write_private(os.path.join(directory, f"{sid}.md"), body)
     # Re-arm the context warning: compaction resets context, so the next climb deserves a new one.
     try:
         latch = cfg.latch_path(sid)

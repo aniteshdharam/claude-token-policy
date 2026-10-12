@@ -290,12 +290,46 @@ class Checkpoint(HookCase):
         self.assertEqual(self.read_count("sess-g"), "1")
 
     def test_precompact_clears_the_context_latch(self):
-        latch_dir = os.path.join(self.tmp, "claude-token-policy")
+        latch_dir = os.path.join(self.home, ".claude", "token-policy-state")
         os.makedirs(latch_dir)
         latch = os.path.join(latch_dir, "ctx-warned-" + "sess-h")
         open(latch, "w").close()
         self.precompact("sess-h", self.brief_transcript())
         self.assertFalse(os.path.exists(latch))
+
+    def test_checkpoint_redacts_secrets(self):
+        path = os.path.join(self.base, "secret.jsonl")
+        cmds = ["curl -H 'Authorization: Bearer abcdef1234567890xyz' https://api.example.test",
+                "export API_KEY=supersecretvalue123",
+                "psql postgres://admin:hunter2pass@db.example.test/app",
+                "echo ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123 sk-ant-abcdefghijklmnopqrstu AKIAABCDEFGHIJKLMNOP",
+                "mysql --password=topsecret42 -u root"]
+        recs = [{"type": "user", "promptId": "p1", "message": {"role": "user", "content":
+                 "Deploy the service and set DB_PASSWORD=promptsecret99 for the run, please."}},
+                {"type": "assistant", "message": {"role": "assistant", "content": [
+                    {"type": "tool_use", "name": "Bash", "input": {"command": c}} for c in cmds]}}]
+        with open(path, "w") as f:
+            for r in recs:
+                f.write(json.dumps(r) + "\n")
+        self.precompact("sess-s", path)
+        with open(os.path.join(self.home, ".claude", "checkpoints", "sess-s.md")) as f:
+            body = f.read()
+        for secret in ("abcdef1234567890xyz", "supersecretvalue123", "hunter2pass", "ghp_ABCDEFGHIJ",
+                       "sk-ant-abcdefghij", "AKIAABCDEFGHIJKLMNOP", "topsecret42", "promptsecret99"):
+            self.assertNotIn(secret, body)
+        self.assertIn("[REDACTED]", body)
+        self.assertIn("api.example.test", body)  # the rest of the command survives
+
+    def test_checkpoint_and_state_are_owner_only(self):
+        self.precompact("sess-p", self.brief_transcript())
+        cp_dir = os.path.join(self.home, ".claude", "checkpoints")
+        self.assertEqual(os.stat(os.path.join(cp_dir, "sess-p.md")).st_mode & 0o777, 0o600)
+        self.assertEqual(os.stat(cp_dir).st_mode & 0o777, 0o700)
+        self.run_hook("read_guard.py", {"session_id": "sess-p", "tool_use_id": "r1",
+                                        "tool_input": {"file_path": os.path.join(self.base, "brief.jsonl")}})
+        state = os.path.join(self.home, ".claude", "token-policy-state")
+        self.assertEqual(os.stat(state).st_mode & 0o777, 0o700)
+        self.assertEqual(os.listdir(self.tmp), [])  # nothing written to the shared temp folder
 
 
 if __name__ == "__main__":

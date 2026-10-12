@@ -84,7 +84,11 @@ def warn_only():
 
 
 def state_dir():
-    return os.path.join(os.environ.get("TMPDIR") or "/tmp", "claude-token-policy")
+    """Per-user hook state, never a shared temp folder: another local user cannot plant or
+    pre-create files here. Created owner-only (0700)."""
+    d = os.path.expanduser("~/.claude/token-policy-state")
+    os.makedirs(d, mode=0o700, exist_ok=True)
+    return d
 
 
 def checkpoint_dir():
