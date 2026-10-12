@@ -11,17 +11,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import _config as cfg  # noqa: E402
 
 
-def prune(state_dir):
-    try:
-        cut = time.time() - 3 * 86400
-        for n in os.listdir(state_dir):
-            p = os.path.join(state_dir, n)
-            if os.path.getmtime(p) < cut:
-                os.remove(p)
-    except Exception:
-        pass
-
-
 def main():
     d = json.load(sys.stdin)
     if cfg.already_seen(d):
@@ -33,7 +22,6 @@ def main():
     ranged = ti.get("offset") is not None or ti.get("limit") is not None
     key = os.path.basename(d.get("transcript_path") or "") or d.get("session_id") or "nosession"
     state_dir = cfg.state_dir()
-    os.makedirs(state_dir, exist_ok=True)
     sf = os.path.join(state_dir, key.replace("/", "_") + ".reads")
     prior, last = 0, None
     try:
@@ -48,7 +36,7 @@ def main():
     with open(sf, "a") as f:
         f.write(f"{path}\t{time.time()}\n")
     if prior == 1:
-        prune(state_dir)
+        cfg.prune_state(state_dir)
     msgs = []
     name = os.path.basename(path)
     if prior and not ranged:
