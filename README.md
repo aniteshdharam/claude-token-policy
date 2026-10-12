@@ -26,9 +26,9 @@ and ran more calls a day, each carrying a third less context, for slightly less 
 We read every local Claude Code transcript from the three weeks before the policy and the five
 and a half weeks after it.
 
-**Before:** 97.6% of all tokens processed were the session re-reading its own history. The
-words a human typed were 0.02%. 70% of subagent dispatches named no model and inherited the
-parent's, often the most expensive tier.
+**Before:** 97.6% of all tokens processed were the session re-reading its own history.
+Prompts, typed or not, were 0.02% (see the correction below). 70% of subagent dispatches named
+no model and inherited the parent's, often the most expensive tier.
 
 **After:**
 
@@ -54,10 +54,17 @@ does not bill them).
 **Correction, 13 October.** Our census read every session in a symlinked project folder twice
 (the symlinks date from 8 August), and added each subagent's compactions to its parent session.
 Over the last 30 days that made its totals about 1.8 times too high. Both windows in this table
-were counted with the same fault, so its ratios and percentage changes should hold; we cannot
-re-run the "before" window, because those transcripts are gone. An earlier version of this page
-said the longest sessions reached 70 and 104 compactions; the true figure is 31. The census is
-fixed and tested.
+were counted with the same fault; we cannot re-run the "before" window, because those
+transcripts are gone. The fault doubled some sessions and not others, so it moved some ratios
+too. Re-counted with the fix over the last 30 days (13 Sep to 12 Oct): context per call went
+from 165k to 161k, the top tier's share of tokens from 11.2% to 10.4%, dispatches with no model
+named from 4.3% to 4.2%, re-reads from 97.1% to 96.9%, and the fixed setup stayed at 42k. The
+prompt share moved most, from 0.057% to 0.091%: the fault hid over a third of it, and the 0.02%
+above was counted with the same fault. That share also counts more than typing. The census
+counts every message sent into a main session, and over those 30 days more than 99% of it came
+from a script or from Claude Code itself (one-message review sessions, compaction summaries,
+background-task notices), not from a person. An earlier version of this page said the longest
+sessions reached 70 and 104 compactions; the true figure is 31. The census is fixed and tested.
 
 ### What did not move, or got worse
 
@@ -78,10 +85,10 @@ The policy came out of our own mistakes.
 |---|---|---|
 | Until 5 Sep | No policy. Seven in ten subagents named no model and inherited the parent's, often the top tier. One call carried 963k of context. | Every dispatch names its tier; the top tier is never a subagent |
 | 15 Aug to 5 Sep | Big sessions left idle past an hour re-wrote their whole context on the next prompt, at the cache-write price. | Do not park a big session and come back |
-| 5 Sep | We measured those three weeks: 97.6% of tokens were re-reads; 0.02% were typed by a human. | Context is the bill; work inside 200k |
+| 5 Sep | We measured those three weeks: 97.6% of tokens were re-reads; 0.02% were prompts, typed or not. | Context is the bill; work inside 200k |
 | 5 Sep to mid Oct | Context per call fell from 240k to 165k. But sessions told to carry on between tasks became marathons; the longest compacted 31 times. | Replace a session after its fourth compaction |
 | Mid Oct | Most of our August transcripts were gone from disk, so the "before" half can no longer be re-run from the files. Claude Code clears old transcripts on its own (see `cleanupPeriodDays`). | Save the census output the day you run it |
-| 13 Oct | Checking the screenshot above against our census turned up two things: the app's total matches counting a reply once per line it is written in, and our census read every session in a symlinked folder twice. Ratios should hold; totals did not. | Count each reply once, read each file once, and check any headline total against a second count |
+| 13 Oct | Checking the screenshot above against our census turned up two things: the app's total matches counting a reply once per line it is written in, and our census read every session in a symlinked folder twice. Most ratios barely moved; the prompt share and the totals did. | Count each reply once, read each file once, and check any headline total against a second count |
 
 ## The four rules
 

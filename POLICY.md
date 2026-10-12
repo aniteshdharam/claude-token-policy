@@ -12,8 +12,8 @@ did not need.
 Every model call re-reads the whole session so far. Prompt caching makes that re-read cheap
 per token, but not free, and it happens on every call. A session at 800k context pays roughly
 four times what a session at 200k pays for the same call, on every call. In our measurement,
-97.6% of all tokens processed were re-reads of context already in the session; the words a
-human typed were 0.02%.
+97.6% of all tokens processed were re-reads of context already in the session; prompts, typed
+or not, were 0.02%.
 
 The second bill is the tier a subagent inherits when nobody names one: 70% of our dispatches
 named no model, and they quietly ran on whatever the parent ran, often the most expensive tier.
