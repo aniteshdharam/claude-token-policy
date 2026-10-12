@@ -1,0 +1,13 @@
+{
+  "name": "claude-token-policy",
+  "owner": {
+    "name": "aniteshdharam"
+  },
+  "plugins": [
+    {
+      "name": "token-policy",
+      "source": "./",
+      "description": "Tier rules, read once and idle-cache warnings, pre-compaction checkpoints, token census and status line for Claude Code."
+    }
+  ]
+}

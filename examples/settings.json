@@ -1,0 +1,11 @@
+{
+  "model": "opus",
+  "autoCompactWindow": 350000,
+  "env": {
+    "CLAUDE_CODE_SUBAGENT_MODEL": "opus"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/statusline.sh"
+  }
+}
