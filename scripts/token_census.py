@@ -23,6 +23,7 @@ import argparse, collections, csv, datetime, glob, json, os
 PRICE = {
     'fable-5-1': (10, 20, 12.5, 0.25, 50),  # Fable 5.1: cache read 0.025x input
     'fable': (10, 20, 12.5, 1.0, 50),       # Fable 5: cache read 0.1x input
+    'opus-5-5': (4, 8, 5, 0.2, 20),         # Opus 5.5: cache read 0.05x input
     'opus': (5, 10, 6.25, 0.5, 25),
     'sonnet': (2, 4, 2.5, 0.2, 10),
     'haiku': (1, 2, 1.25, 0.1, 5),

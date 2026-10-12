@@ -1,5 +1,6 @@
 {
   "name": "claude-token-policy",
+  "description": "A measured token policy for Claude Code: tier rules, read-once and idle-cache warnings, compaction checkpoints and a token census.",
   "owner": {
     "name": "aniteshdharam"
   },
