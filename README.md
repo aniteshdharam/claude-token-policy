@@ -175,6 +175,13 @@ python3 -m unittest discover -s tests -v
 Every hook, and the census, is run as a subprocess with sample input in a throwaway folder, so
 the tests touch nothing of yours. They run in CI on every push.
 
+## Sibling plugin
+
+[claude-lanes](https://github.com/aniteshdharam/claude-lanes) carries the other half of how we
+run Claude Code: three risk lanes that size design, review and model tier to each change, a
+finder-and-verifier review panel for high-risk work, and hand-offs through a tracking issue. This
+marketplace lists it: `/plugin install lanes@claude-token-policy`.
+
 ## License
 
 MIT
