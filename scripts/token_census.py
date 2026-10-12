@@ -7,6 +7,11 @@ dispatches by (type, model), skill loads, session shape, cache re-write causes, 
 the tiny SDK-launched sessions (sections A-K). Tokens are the truth; the dollar column is an API
 list-price estimate used as a weight (subscription plans do not bill it).
 
+Each reply counts once: Claude Code writes one reply as several lines (thinking, text, each tool
+call), and a resumed or copied transcript can carry replies already counted elsewhere. Each real
+file is read once, so a project folder reached through a symlink is not counted twice. Compactions
+are the main session's own; a subagent's compactions do not count as its parent's.
+
 Usage: python3 scripts/token_census.py --since 2026-08-15 [--until 2026-09-01] [--root DIR] [--csv FILE]
   --since  first day included (UTC), default 21 days ago
   --until  first day NOT included (UTC), default: no upper bound
@@ -76,6 +81,7 @@ def main():
     AG = collections.Counter(); AGP = collections.Counter(); SK = collections.Counter(); RR = collections.Counter()
     RW = collections.defaultdict(lambda: [0, 0, 0.0]); FIRST = [0, 0, 0.0]; SUBFIRST = [0, 0, 0.0]
     sub_inherit = [0, 0, 0.0]; sub_fresh = [0, 0, 0.0]; sub_first_ctx = []
+    IDS = set(); DONE = set()  # reply ids counted in any file; real paths already read
 
     def title_for(projdir, sid):
         p = os.path.join(projdir, sid, 'custom-title.json')
@@ -102,7 +108,7 @@ def main():
                     continue
                 st['entry'] = st['entry'] or d.get('entrypoint')
                 sub = file_is_sub or bool(d.get('isSidechain')); typ = d.get('type')
-                if typ == 'summary':
+                if typ == 'summary' and not sub:
                     st['compactions'] += 1
                 if typ == 'assistant':
                     m = d.get('message') or {}; u = m.get('usage'); mid = m.get('id')
@@ -122,13 +128,15 @@ def main():
                     if u and mid:
                         if mid in seen:
                             seen[mid]['output_tokens'] = max(seen[mid].get('output_tokens', 0) or 0, u.get('output_tokens', 0) or 0); continue
-                        u = dict(u); u['_tier'] = tier(m.get('model')); u['_model'] = m.get('model'); u['_sub'] = sub; u['_ts'] = t; seen[mid] = u
+                        if mid in IDS:
+                            continue
+                        IDS.add(mid); u = dict(u); u['_tier'] = tier(m.get('model')); u['_model'] = m.get('model'); u['_sub'] = sub; u['_ts'] = t; seen[mid] = u
                 elif typ == 'user':
                     m = d.get('message') or {}; content = m.get('content')
                     if isinstance(content, str):
                         if not d.get('isMeta') and not sub:
                             st['prompts'] += 1; st['prompt_chars'] += len(content)
-                        if 'continued from a previous conversation' in content:
+                        if 'continued from a previous conversation' in content and not sub:
                             st['compactions'] += 1
                     elif isinstance(content, list):
                         has_tr = False
@@ -181,10 +189,12 @@ def main():
             proj = '~' + proj[len(home_prefix):]
         proj = proj[:34]
         for fp in glob.glob(projdir + '/*.jsonl'):
-            if os.path.getmtime(fp) >= since_m:
+            if os.path.getmtime(fp) >= since_m and os.path.realpath(fp) not in DONE:
+                DONE.add(os.path.realpath(fp))
                 sid = os.path.basename(fp)[:-6]; parse(fp, sid, proj, False); S[sid]['title'] = S[sid]['title'] or title_for(projdir, sid)
         for fp in glob.glob(projdir + '/*/subagents/*.jsonl'):
-            if os.path.getmtime(fp) >= since_m:
+            if os.path.getmtime(fp) >= since_m and os.path.realpath(fp) not in DONE:
+                DONE.add(os.path.realpath(fp))
                 sid = fp.split('/')[-3]; parse(fp, sid, proj, True)
 
     M = lambda x: f"{x / 1e6:8.1f}M"; K = lambda x: f"{x / 1e3:6.0f}k"; act = [st for st in S.values() if st['calls']]

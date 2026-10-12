@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.2
+
+- Census: each real file is read once, so a project folder reached through a symlink is no
+  longer counted twice; each reply counts once even when a transcript carries a copy of it;
+  compactions are the main session's own, not its subagents'. New test: `tests/test_census.py`.
+- README: the all-time usage picture set against the census, a dated correction (totals were
+  about 1.8 times too high over the last 30 days; ratios should hold; the longest session
+  compacted 31 times, not 70 or 104), and a dated learning-curve table.
+
 ## 0.1.1
 
 - Hooks: the per-event markers in `~/.claude/token-policy-state` are now pruned by ordinary

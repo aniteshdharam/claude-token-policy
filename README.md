@@ -4,14 +4,29 @@
 
 This is the token policy our small team runs Claude Code under, packaged as a plugin: a skill
 the model follows, hooks that enforce the rules by machine, and a census script that measures
-your own transcripts so you can check the claim on your own usage.
+your transcripts so you can check the claim against your own usage.
+
+![Claude Code usage, all time: 12,528 sessions, 2,654,822 messages, 394.6B tokens, 145 active days](assets/usage-all-time.png)
+
+One founder's account, as the Claude app counts it: 145 active days, 394.6B tokens.
+
+That headline is about 2.4 times the real figure. Claude Code writes one reply as several lines
+(its thinking, its text, each tool call), and the app's total matches counting a reply's tokens
+once for every line. Over the last 30 days the app shows 133.4B. Counting every line of every
+transcript gives 133.0B. Counting each reply once, as our census does, gives 55.6B. Scaled the
+same way, the all-time figure is roughly 165B. Either way, about 97% of it was Claude re-reading
+its own context. This repo is what we did about it.
+
+The squares count messages per day, not tokens (hover one: 4 August shows 20,441). They darken
+after 5 September, when the policy began: we moved work off the top tier onto Opus and Sonnet
+and ran more calls a day, each carrying a third less context, for slightly less money per day.
 
 ## What we measured
 
-We read every local Claude Code transcript for three weeks before the policy, then again for
-five and a half weeks after it.
+We read every local Claude Code transcript from the three weeks before the policy and the five
+and a half weeks after it.
 
-**Before:** 97.6% of every token processed was the session re-reading its own history. The
+**Before:** 97.6% of all tokens processed were the session re-reading its own history. The
 words a human typed were 0.02%. 70% of subagent dispatches named no model and inherited the
 parent's, often the most expensive tier.
 
@@ -31,22 +46,42 @@ parent's, often the most expensive tier.
 | Repeat reads of the same file, per day | 20% fewer |
 | Fixed setup before the first word (system prompt, tools, skills, memory) | 49k → 42k |
 
-A third more work per day, for slightly less money, because each call carries a third less
-context. The per-call context figure does not depend on prices, so it is the most reliable
+We did a third more work per day for slightly less money, because each call carried a third
+less context. The per-call context figure does not depend on prices, so it is the most reliable
 number in the table; the dollar figures use API list prices as a yardstick (a subscription
 does not bill them).
+
+**Correction, 13 October.** Our census read every session in a symlinked project folder twice
+(the symlinks date from 8 August), and added each subagent's compactions to its parent session.
+Over the last 30 days that made its totals about 1.8 times too high. Both windows in this table
+were counted with the same fault, so its ratios and percentage changes should hold; we cannot
+re-run the "before" window, because those transcripts are gone. An earlier version of this page
+said the longest sessions reached 70 and 104 compactions; the true figure is 31. The census is
+fixed and tested.
 
 ### What did not move, or got worse
 
 - **The re-read share stayed at ~97%.** That is how prompt caching works, and the policy never
   tried to change it. It made each re-read smaller instead. 97% re-reads is not 97% waste.
 - **Marathon sessions got longer.** We had told long-running sessions to carry on from one
-  task to the next instead of rebooting. The largest session then ran about three times as
-  many calls as before, with 70 compactions; another reached 104. Each call was cheap; the
-  sessions never ended. We added a rule: replace a session after its fourth compaction, at the
+  task to the next instead of rebooting. The longest then compacted 31 times. Each call was
+  cheap, but the sessions never ended. We added a rule: replace a session after its fourth compaction, at the
   next natural break. The plugin warns on it. We will publish the re-measure.
 - **The most re-read file in any session was our own memory index.** Shared, frequently
   edited files get re-read by design; budget for them.
+
+## The learning curve
+
+The policy came out of our own mistakes.
+
+| When | What happened | What it became |
+|---|---|---|
+| Until 5 Sep | No policy. Seven in ten subagents named no model and inherited the parent's, often the top tier. One call carried 963k of context. | Every dispatch names its tier; the top tier is never a subagent |
+| 15 Aug to 5 Sep | Big sessions left idle past an hour re-wrote their whole context on the next prompt, at the cache-write price. | Do not park a big session and come back |
+| 5 Sep | We measured those three weeks: 97.6% of tokens were re-reads; 0.02% were typed by a human. | Context is the bill; work inside 200k |
+| 5 Sep to mid Oct | Context per call fell from 240k to 165k. But sessions told to carry on between tasks became marathons; the longest compacted 31 times. | Replace a session after its fourth compaction |
+| Mid Oct | Most of our August transcripts were gone from disk, so the "before" half can no longer be re-run from the files. Claude Code clears old transcripts on its own (see `cleanupPeriodDays`). | Save the census output the day you run it |
+| 13 Oct | Checking the screenshot above against our census turned up two things: the app's total matches counting a reply once per line it is written in, and our census read every session in a symlinked folder twice. Ratios should hold; totals did not. | Count each reply once, read each file once, and check any headline total against a second count |
 
 ## The four rules
 
@@ -76,8 +111,8 @@ The full policy, including who builds what, review sizing and long-session rules
 ```
 
 Then copy the keys you want from [examples/settings.json](examples/settings.json) into
-`~/.claude/settings.json` ([what each key does](examples/README-settings.md)). The most
-valuable single line is `"CLAUDE_CODE_SUBAGENT_MODEL": "opus"` under `env`: it stops unnamed
+`~/.claude/settings.json` ([what each key does](examples/README-settings.md)). If you copy a
+single line, make it `"CLAUDE_CODE_SUBAGENT_MODEL": "opus"` under `env`: it stops unnamed
 subagents from inheriting the top tier.
 
 ## What is in the box
@@ -129,7 +164,7 @@ or narrows the window. The console output names your sessions by their titles; a
 `--no-titles` for output you mean to share. The dollar column uses a price table at the top
 of the script, with the date it was last checked printed in the output; edit it if your
 provider's page differs. If your re-read share, unnamed-dispatch share or
-largest-context figure looks like ours did, the policy will pay.
+largest-context figure looks like ours did, the policy will pay off.
 
 ## Tests
 
@@ -137,8 +172,8 @@ largest-context figure looks like ours did, the policy will pay.
 python3 -m unittest discover -s tests -v
 ```
 
-Every hook is run as a subprocess with sample hook input in a throwaway home folder, so the
-tests touch nothing of yours. They run in CI on every push.
+Every hook, and the census, is run as a subprocess with sample input in a throwaway folder, so
+the tests touch nothing of yours. They run in CI on every push.
 
 ## License
 
