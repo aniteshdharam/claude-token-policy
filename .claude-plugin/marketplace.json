@@ -9,6 +9,14 @@
       "name": "token-policy",
       "source": "./",
       "description": "Tier rules, read once and idle-cache warnings, pre-compaction checkpoints, token census and status line for Claude Code."
+    },
+    {
+      "name": "lanes",
+      "source": {
+        "source": "github",
+        "repo": "aniteshdharam/claude-lanes"
+      },
+      "description": "Size the engineering ceremony to the risk of each change: three lanes, a finder-and-verifier review panel for high-risk work, and hand-offs through a tracking issue."
     }
   ]
 }
