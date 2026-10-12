@@ -11,6 +11,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -155,6 +156,17 @@ class ReadGuard(HookCase):
         self.assertIn("grep first", self.out(self.read(path))["additionalContext"])
         path2 = self.make(80000)
         self.assertIsNone(self.out(self.read(path2, limit=100)))
+
+    def test_state_folder_is_pruned_by_ordinary_events(self):
+        # Every hook event leaves a marker; old ones must go without read_guard's second-read path.
+        state = os.path.join(self.home, ".claude", "token-policy-state")
+        os.makedirs(state, mode=0o700)
+        stale = os.path.join(state, "seen-stale")
+        open(stale, "w").close()
+        os.utime(stale, (time.time() - 10 * 86400,) * 2)
+        for _ in range(200):  # one event in sixteen prunes; 200 distinct events make a miss negligible
+            self.read(self.make(100 + self.counter))
+        self.assertFalse(os.path.exists(stale))
 
     def test_large_file_threshold_is_configurable(self):
         path = self.make(500)

@@ -36,6 +36,7 @@ import datetime
 import hashlib
 import json
 import os
+import time
 
 DEFAULT_WINDOW = 350_000
 TRIGGER_FRACTION = 0.90     # the harness compacts at about 90% of the configured window
@@ -99,18 +100,37 @@ def latch_path(session_id):
     return os.path.join(state_dir(), "ctx-warned-" + str(session_id))
 
 
+STATE_MAX_AGE_DAYS = 3
+
+
+def prune_state(d=None, max_age_days=STATE_MAX_AGE_DAYS):
+    """Delete state files older than max_age_days. Every hook event leaves one small marker
+    here, so without pruning the folder grows by one file per tool call for ever."""
+    try:
+        d = d or state_dir()
+        cut = time.time() - max_age_days * 86400
+        for n in os.listdir(d):
+            p = os.path.join(d, n)
+            if os.path.getmtime(p) < cut:
+                os.remove(p)
+    except Exception:
+        pass
+
+
 def already_seen(d):
     """True if this exact hook event was already handled (the hook can be registered twice,
-    for example once by a plugin and once by a user settings file). Marks the event as seen."""
+    for example once by a plugin and once by a user settings file). Marks the event as seen.
+    One event in sixteen also prunes old markers, so the state folder stays small."""
     try:
         raw = (str(d.get("tool_use_id") or "") + str(d.get("session_id") or "")
                + str(d.get("prompt") or "") + json.dumps(d.get("tool_input") or {}, sort_keys=True))
         key = hashlib.sha1(raw.encode()).hexdigest()[:24]
         mark = os.path.join(state_dir(), "seen-" + key)
-        os.makedirs(os.path.dirname(mark), exist_ok=True)
         if os.path.exists(mark):
             return True
         open(mark, "w").close()
+        if key[0] == "0":
+            prune_state()
     except Exception:
         pass
     return False

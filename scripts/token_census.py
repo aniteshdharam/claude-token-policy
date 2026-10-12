@@ -8,7 +8,7 @@ the tiny SDK-launched sessions (sections A-K). Tokens are the truth; the dollar 
 list-price estimate used as a weight (subscription plans do not bill it).
 
 Usage: python3 scripts/token_census.py --since 2026-08-15 [--until 2026-09-01] [--root DIR] [--csv FILE]
-  --since  first day included (UTC), default 30 days ago
+  --since  first day included (UTC), default 21 days ago
   --until  first day NOT included (UTC), default: no upper bound
   --root   transcripts folder, default ~/.claude/projects
   --csv    also write a per-session CSV
@@ -58,9 +58,13 @@ def new_session():
                 big200=0, big400=0, forks=0, agents=0, entry=None, models=set())
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument('--since', default=(datetime.date.today() - datetime.timedelta(days=30)).isoformat())
-    ap.add_argument('--until', default='')
-    ap.add_argument('--root', default=os.path.expanduser('~/.claude/projects')); ap.add_argument('--csv', default='')
+    ap = argparse.ArgumentParser(description='Token census over local Claude Code transcripts. Reads files only; sends nothing anywhere. '
+                                             'Dollar figures are API list-price estimates used as a weight, not a bill.')
+    ap.add_argument('--since', default=(datetime.date.today() - datetime.timedelta(days=21)).isoformat(),
+                    metavar='YYYY-MM-DD', help='first day included (UTC); default 21 days ago')
+    ap.add_argument('--until', default='', metavar='YYYY-MM-DD', help='first day NOT included (UTC); default: no upper bound')
+    ap.add_argument('--root', default=os.path.expanduser('~/.claude/projects'), metavar='DIR', help='transcripts folder; default ~/.claude/projects')
+    ap.add_argument('--csv', default='', metavar='FILE', help='also write a per-session CSV (it includes session titles)')
     a = ap.parse_args()
     SINCE = datetime.datetime.fromisoformat(a.since).replace(tzinfo=datetime.timezone.utc); since_m = SINCE.timestamp()
     UNTIL = datetime.datetime.fromisoformat(a.until).replace(tzinfo=datetime.timezone.utc) if a.until else None

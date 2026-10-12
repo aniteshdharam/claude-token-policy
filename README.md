@@ -60,6 +60,14 @@ does not bill them).
 The full policy, including who builds what, review sizing and long-session rules, is in
 [POLICY.md](POLICY.md).
 
+## Requirements
+
+- Claude Code with plugin support and the `PreCompact` and `SessionStart` hook events
+  (any 2026 release). Tested on macOS and Linux; the hooks call `python3`, so on Windows make
+  sure that name resolves.
+- Python 3.9 or newer. The hooks and the census use the standard library only.
+- `jq`, only for the optional status line.
+
 ## Install
 
 ```
@@ -93,16 +101,42 @@ command line will be in it.
 Hooks default to enforcing. Set `TOKEN_POLICY_MODE=warn` to turn every refusal into a warning
 while you try it out. Thresholds are environment variables; see `hooks/_config.py`.
 
+### Which tier is "top" for you
+
+The defaults assume three tiers: a top tier the hooks keep out of subagents (`fable`), a
+strong tier for judgement (`opus`) and a fast tier for mechanical work (`sonnet`). If the most
+expensive model you can run is Opus, shift everything down one step in the `env` block:
+
+```json
+"TOKEN_POLICY_TOP_TIER": "opus",
+"TOKEN_POLICY_DEFAULT_MODEL": "sonnet",
+"CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
+```
+
+Then Opus stays in the main session, and every unnamed subagent runs on Sonnet.
+
 ## Measure yourself first
 
 Before installing anything, run the census on your own last three weeks:
 
 ```
-python3 scripts/token_census.py --since 2026-09-01
+git clone https://github.com/aniteshdharam/claude-token-policy
+python3 claude-token-policy/scripts/token_census.py
 ```
 
-It reads `~/.claude/projects` locally and sends nothing anywhere. If your re-read share,
-unnamed-dispatch share or largest-context figure looks like ours did, the policy will pay.
+It reads `~/.claude/projects` locally and sends nothing anywhere; `--since YYYY-MM-DD` widens
+or narrows the window. The console output names your sessions by their titles, so paste it
+into a public place only after a look. If your re-read share, unnamed-dispatch share or
+largest-context figure looks like ours did, the policy will pay.
+
+## Tests
+
+```
+python3 -m unittest discover -s tests -v
+```
+
+Every hook is run as a subprocess with sample hook input in a throwaway home folder, so the
+tests touch nothing of yours. They run in CI on every push.
 
 ## License
 

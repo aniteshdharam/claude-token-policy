@@ -46,7 +46,7 @@ def main():
         if parent_top:
             refuse(f"this session runs on the top tier ({top}), and a fork runs on the parent's model with the "
                    f"parent's whole context (~{k}k tokens) re-sent on every turn. Dispatch a fresh subagent "
-                   "instead: a mid tier for judgement work, a fast tier for mechanical work, with a written "
+                   "instead: the strong tier for judgement work, the fast tier for mechanical work, with a written "
                    "brief (the delta, the files, the question).")
         limit = cfg.fork_max_tokens()
         if ctx > limit:
@@ -57,8 +57,8 @@ def main():
                               "every turn, so keep it short-lived.")
 
     if top and top in model:
-        refuse(f"the top tier ({top}) is not a subagent tier. Pass a middle-tier model for judgement work "
-               "(review, design, debugging), a fast-tier model for mechanical work (search, census, "
+        refuse(f"the top tier ({top}) is not a subagent tier. Pass the strong-tier model for judgement work "
+               "(review, design, debugging), the fast-tier model for mechanical work (search, census, "
                "sweeps, formatting, bulk transforms) or ordinary building (with a written brief), and keep "
                "top-tier decisions in the main session.")
 
@@ -70,8 +70,8 @@ def main():
     if not model and styp in GENERIC and default:
         out(updatedInput={**ti, "model": default},
             additionalContext=(f"Token policy: no model named; defaulted to {default}. Name the tier yourself: "
-                               "a fast tier for mechanical work (search, census, sweeps, formatting), "
-                               "a fast tier for ordinary building with a written brief, a mid tier for judgement (review, design, debugging)."))
+                               "the fast tier for mechanical work (search, census, sweeps, formatting) and for ordinary "
+                               "building with a written brief; the strong tier for judgement (review, design, debugging)."))
 
 
 if __name__ == "__main__":
