@@ -6,7 +6,9 @@
   events (one in sixteen), not only when a file is read a second time. Before this the folder
   grew by one small file per tool call.
 - Dispatch guard: refusal text names the tiers the same way the README does (top, strong, fast).
-- Census: `--help` describes every flag; the default window is 21 days, matching `/token-census`.
+- Census: `--help` describes every flag; the default window is 21 days, matching `/token-census`;
+  `--no-titles` leaves session titles out of the output; the output states when the price
+  table was last checked.
 - README: requirements, how to shift the tiers when Opus is your top model, how to run the tests.
 - CI: the test suite runs on every push and pull request (Linux and macOS, Python 3.9 and 3.13).
 

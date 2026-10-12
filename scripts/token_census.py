@@ -20,6 +20,7 @@ import argparse, collections, csv, datetime, glob, json, os
 # check your provider's price page and edit this table. A model whose name matches no key is
 # priced as 'opus'. Add a row for any tier you use. A model takes the FIRST key its name contains,
 # so a more specific key must come before a broader one ('fable-5-1' before 'fable').
+PRICE_CHECKED = '2026-10-13'  # the day this table was last compared with the provider's price page
 PRICE = {
     'fable-5-1': (10, 20, 12.5, 0.25, 50),  # Fable 5.1: cache read 0.025x input
     'fable': (10, 20, 12.5, 1.0, 50),       # Fable 5: cache read 0.1x input
@@ -64,7 +65,8 @@ def main():
                     metavar='YYYY-MM-DD', help='first day included (UTC); default 21 days ago')
     ap.add_argument('--until', default='', metavar='YYYY-MM-DD', help='first day NOT included (UTC); default: no upper bound')
     ap.add_argument('--root', default=os.path.expanduser('~/.claude/projects'), metavar='DIR', help='transcripts folder; default ~/.claude/projects')
-    ap.add_argument('--csv', default='', metavar='FILE', help='also write a per-session CSV (it includes session titles)')
+    ap.add_argument('--csv', default='', metavar='FILE', help='also write a per-session CSV')
+    ap.add_argument('--no-titles', action='store_true', help='leave session titles out of the console output and the CSV')
     a = ap.parse_args()
     SINCE = datetime.datetime.fromisoformat(a.since).replace(tzinfo=datetime.timezone.utc); since_m = SINCE.timestamp()
     UNTIL = datetime.datetime.fromisoformat(a.until).replace(tzinfo=datetime.timezone.utc) if a.until else None
@@ -187,6 +189,7 @@ def main():
 
     M = lambda x: f"{x / 1e6:8.1f}M"; K = lambda x: f"{x / 1e3:6.0f}k"; act = [st for st in S.values() if st['calls']]
     window = f"{a.since} to {a.until}" if a.until else f"{a.since}"
+    print(f"Prices in this script were last checked on {PRICE_CHECKED}; edit PRICE at the top if your provider's page differs.")
     print(f"== A. Spend by tier and role since {window} (sessions={len(act)}) ==")
     print(f"{'tier/role':12}{'calls':>7}{'ctx-tok proc':>13}{'cache_read':>11}{'cache_wr':>10}{'output':>9}{'thinking':>10}{'>200k':>7}{'>400k':>7}{'est $':>8}")
     tot = 0
@@ -198,6 +201,9 @@ def main():
     print("\n== B. Top 15 sessions by est $ ==")
     print(f"{'proj':22}{'sid':9}{'tier':7}{'calls':>6}{'sub%':>5}{'prompts':>8}{'ctxmax':>8}{'ctxproc':>10}{'out':>7}{'compact':>8}{'reread':>7}{'forks':>6}{'$':>6}  title")
     top = sorted(act, key=lambda s: -s['cost'])
+    if a.no_titles:
+        for st in act:
+            st['title'] = ''
     for st in top[:15]:
         sid = next(k for k, v in S.items() if v is st)
         print(f"{st['proj'][:21]:22}{sid[:8]:9}{st['tiers'].most_common(1)[0][0]:7}{st['calls']:6d}{100 * st['subcost'] / max(st['cost'], 1e-9):5.0f}{st['prompts']:8d}{K(st['ctx_max']):>8}{M(st['ctx_sum']):>10}{K(st['out']):>7}{st['compactions']:8d}{st['reread_n']:7d}{st['forks']:6d}{st['cost']:6.0f}  {st['title'][:40]}")

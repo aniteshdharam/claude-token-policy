@@ -10,6 +10,8 @@ Run this single command and read its output. If an argument was given, it is the
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/token_census.py" --since <start date>
 ```
 
+Add `--no-titles` if the user asks for output they can share: it leaves session titles out.
+
 Then summarise the result in plain words, in at most 12 lines:
 - which tier and role (main session or subagent) account for most of the estimated spend;
 - how much of the context processed was cache re-reads, and how many sessions crossed 200k;

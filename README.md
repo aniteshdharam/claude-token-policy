@@ -125,8 +125,10 @@ python3 claude-token-policy/scripts/token_census.py
 ```
 
 It reads `~/.claude/projects` locally and sends nothing anywhere; `--since YYYY-MM-DD` widens
-or narrows the window. The console output names your sessions by their titles, so paste it
-into a public place only after a look. If your re-read share, unnamed-dispatch share or
+or narrows the window. The console output names your sessions by their titles; add
+`--no-titles` for output you mean to share. The dollar column uses a price table at the top
+of the script, with the date it was last checked printed in the output; edit it if your
+provider's page differs. If your re-read share, unnamed-dispatch share or
 largest-context figure looks like ours did, the policy will pay.
 
 ## Tests
