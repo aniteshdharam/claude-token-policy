@@ -30,7 +30,9 @@ Optional extras for the dispatch hook:
                                                    (set to an empty string to leave them alone)
 
 Compaction window: the checkpoint warning line is derived as a fraction of the configured
-`autoCompactWindow` (project settings first, then user settings), never a fixed number in code.
+`autoCompactWindow` (managed settings first, then project, then user), never a fixed number in code.
+If automatic compaction is switched off (`autoCompactEnabled: false`, `DISABLE_COMPACT` or
+`DISABLE_AUTO_COMPACT`), the turn guard says so once per session instead of promising runway.
 """
 import datetime
 import hashlib
@@ -185,16 +187,27 @@ def _parse_window(v):
     return None
 
 
-def compaction_window():
-    """The configured autoCompactWindow; project settings win over user settings."""
-    paths = []
+MANAGED_SETTINGS = ("/Library/Application Support/ClaudeCode/managed-settings.json",
+                    "/etc/claude-code/managed-settings.json",
+                    r"C:\ProgramData\ClaudeCode\managed-settings.json")
+
+
+def settings_paths():
+    """Settings files, highest precedence first: managed, project local, project, user local, user.
+    Settings passed on the command line (--settings) are invisible to a hook and not read."""
+    paths = list(MANAGED_SETTINGS)
     proj = os.environ.get("CLAUDE_PROJECT_DIR")
     if proj:
         paths += [os.path.join(proj, ".claude", "settings.local.json"),
                   os.path.join(proj, ".claude", "settings.json")]
     paths += [os.path.expanduser("~/.claude/settings.local.json"),
               os.path.expanduser("~/.claude/settings.json")]
-    for p in paths:
+    return paths
+
+
+def compaction_window():
+    """The configured autoCompactWindow, from the highest-precedence settings file that sets it."""
+    for p in settings_paths():
         try:
             with open(p) as f:
                 w = _parse_window(json.load(f).get("autoCompactWindow"))
@@ -203,3 +216,33 @@ def compaction_window():
         except Exception:
             continue
     return DEFAULT_WINDOW
+
+
+def _truthy(v):
+    return str(v or "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def autocompact_off():
+    """Why automatic compaction is off, or None when it is on.
+
+    Claude Code turns automatic compaction off when DISABLE_COMPACT or DISABLE_AUTO_COMPACT is
+    set in the environment, and otherwise follows the autoCompactEnabled setting (default on).
+    With it off, autoCompactWindow does nothing: context grows to the model's hard limit and
+    every call re-sends all of it. The /config menu's Auto-compact toggle writes the setting
+    without a trace in any transcript, so the turn guard says so out loud."""
+    for var in ("DISABLE_COMPACT", "DISABLE_AUTO_COMPACT"):
+        if _truthy(os.environ.get(var)):
+            return "%s=%s in the environment" % (var, os.environ[var])
+    for p in settings_paths():
+        try:
+            with open(p) as f:
+                s = json.load(f)
+        except Exception:
+            continue
+        if isinstance(s, dict) and "autoCompactEnabled" in s:
+            return '"autoCompactEnabled": false in %s' % p if s["autoCompactEnabled"] is False else None
+    return None
+
+
+def off_latch_path(session_id):
+    return os.path.join(state_dir(), "compact-off-warned-" + str(session_id))

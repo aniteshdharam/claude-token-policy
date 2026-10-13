@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.3
+
+- Turn guard: says once per session, at any context size, when automatic compaction is switched
+  off (`autoCompactEnabled: false`, or `DISABLE_COMPACT` / `DISABLE_AUTO_COMPACT` in the
+  environment), and names where. Before this it kept promising "runway" before a compaction
+  that would never come. The `/config` Auto-compact toggle writes that setting without a trace
+  in any transcript; on the author's machine it went unnoticed overnight, compactions fell from
+  about 100 a day to 3 and sessions ran past 600k. Settings are now read in Claude Code's own
+  order, managed settings first. Five new tests in `tests/test_hooks.py`.
+
 ## 0.1.2
 
 - Census: each real file is read once, so a project folder reached through a symlink is no
