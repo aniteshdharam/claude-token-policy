@@ -87,7 +87,7 @@ A policy that relies on memory decays. Ours held because the defaults and hooks 
 | Rule | Mechanism |
 |---|---|
 | Standard window, strong tier by default | `"model": "opus"` in settings (the family name, so upgrades need no edit) |
-| Compaction before context gets huge | `autoCompactWindow`; note compaction fires at roughly 90% of the configured number |
+| Compaction before context gets huge | `autoCompactWindow`, with `autoCompactEnabled` left on (the turn guard warns if it is off); note compaction fires at roughly 90% of the configured number |
 | Unnamed dispatches never inherit the top tier | `CLAUDE_CODE_SUBAGENT_MODEL=opus` |
 | No top-tier subagents, no forks from the top tier, no forks above 100k | `dispatch_guard` hook |
 | Re-read and whole-large-file warnings | `read_guard` hook (warns, never blocks) |

@@ -89,6 +89,7 @@ The policy came out of our own mistakes.
 | 5 Sep to mid Oct | Context per call fell from 240k to 165k. But sessions told to carry on between tasks became marathons; the longest compacted 31 times. | Replace a session after its fourth compaction |
 | Mid Oct | Most of our August transcripts were gone from disk, so the "before" half can no longer be re-run from the files. Claude Code clears old transcripts on its own (see `cleanupPeriodDays`). | Save the census output the day you run it |
 | 13 Oct | Checking the screenshot above against our census turned up two things: the app's total matches counting a reply once per line it is written in, and our census read every session in a symlinked folder twice. Most ratios barely moved; the prompt share and the totals did. | Count each reply once, read each file once, and check any headline total against a second count |
+| 13 Oct, night | One toggle in Claude Code's settings, most likely in the `/config` menu, switched automatic compaction off. Nothing logged it, and our own turn guard kept promising runway before a compaction that never came. By morning compactions had fallen from 70-150 a day to 3, and sessions ran past 600k. | Check that compaction is on, not just its window; the turn guard now says when it is off (0.1.3) |
 
 ## The four rules
 
