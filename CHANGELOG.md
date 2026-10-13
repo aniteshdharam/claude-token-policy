@@ -1,5 +1,8 @@
 # Changelog
 
+In brief. Each version's [release note](https://github.com/aniteshdharam/claude-token-policy/releases)
+says why as well.
+
 ## 0.1.3
 
 - Turn guard: says once per session, at any context size, when automatic compaction is switched
@@ -8,7 +11,7 @@
   that would never come. The `/config` Auto-compact toggle writes that setting without a trace
   in any transcript; on the author's machine it went unnoticed overnight, compactions fell from
   about 100 a day to 3 and sessions ran past 600k. Settings are now read in Claude Code's own
-  order, managed settings first. Five new tests in `tests/test_hooks.py`.
+  order, managed settings first. Six new tests in `tests/test_hooks.py`.
 
 ## 0.1.2
 

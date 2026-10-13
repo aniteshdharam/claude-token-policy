@@ -51,20 +51,10 @@ less context. The per-call context figure does not depend on prices, so it is th
 number in the table; the dollar figures use API list prices as a yardstick (a subscription
 does not bill them).
 
-**Correction, 13 October.** Our census read every session in a symlinked project folder twice
-(the symlinks date from 8 August), and added each subagent's compactions to its parent session.
-Over the last 30 days that made its totals about 1.8 times too high. Both windows in this table
-were counted with the same fault; we cannot re-run the "before" window, because those
-transcripts are gone. The fault doubled some sessions and not others, so it moved some ratios
-too. Re-counted with the fix over the last 30 days (13 Sep to 12 Oct): context per call went
-from 165k to 161k, the top tier's share of tokens from 11.2% to 10.4%, dispatches with no model
-named from 4.3% to 4.2%, re-reads from 97.1% to 96.9%, and the fixed setup stayed at 42k. The
-prompt share moved most, from 0.057% to 0.091%: the fault hid over a third of it, and the 0.02%
-above was counted with the same fault. That share also counts more than typing. The census
-counts every message sent into a main session, and over those 30 days more than 99% of it came
-from a script or from Claude Code itself (one-message review sessions, compaction summaries,
-background-task notices), not from a person. An earlier version of this page said the longest
-sessions reached 70 and 104 compactions; the true figure is 31. The census is fixed and tested.
+**Correction, 13 October.** Our census counted some sessions twice. Re-counted over the last 30
+days, context per call is 161k, not 165k; the other ratios in the table moved by less than a point,
+except the prompt share, which the fault had understated by over a third. The full correction is in
+the [0.1.2 release note](https://github.com/aniteshdharam/claude-token-policy/releases/tag/v0.1.2).
 
 ### What did not move, or got worse
 
@@ -88,8 +78,8 @@ The policy came out of our own mistakes.
 | 5 Sep | We measured those three weeks: 97.6% of tokens were re-reads; 0.02% were prompts, typed or not. | Context is the bill; work inside 200k |
 | 5 Sep to mid Oct | Context per call fell from 240k to 165k. But sessions told to carry on between tasks became marathons; the longest compacted 31 times. | Replace a session after its fourth compaction |
 | Mid Oct | Most of our August transcripts were gone from disk, so the "before" half can no longer be re-run from the files. Claude Code clears old transcripts on its own (see `cleanupPeriodDays`). | Save the census output the day you run it |
-| 13 Oct | Checking the screenshot above against our census turned up two things: the app's total matches counting a reply once per line it is written in, and our census read every session in a symlinked folder twice. Most ratios barely moved; the prompt share and the totals did. | Count each reply once, read each file once, and check any headline total against a second count |
-| 13 Oct, night | One toggle in Claude Code's settings, most likely in the `/config` menu, switched automatic compaction off. Nothing logged it, and our own turn guard kept promising runway before a compaction that never came. By morning compactions had fallen from 70-150 a day to 3, and sessions ran past 600k. | Check that compaction is on, not just its window; the turn guard now says when it is off (0.1.3) |
+| 13 Oct | Checking the screenshot above against our census showed the app counts a reply once per line it is written in, and our census read some sessions twice ([0.1.2](https://github.com/aniteshdharam/claude-token-policy/releases/tag/v0.1.2)). | Count each reply once, read each file once, and check any headline total against a second count |
+| 13 Oct, night | Automatic compaction was switched off by one settings toggle; nothing logged it, our turn guard missed it, and sessions ran past 600k by morning ([0.1.3](https://github.com/aniteshdharam/claude-token-policy/releases/tag/v0.1.3)). | Check that compaction is on, not just its window; the turn guard now says when it is off |
 
 ## The four rules
 
@@ -189,6 +179,11 @@ the tests touch nothing of yours. They run in CI on every push.
 run Claude Code: three risk lanes that size design, review and model tier to each change, a
 finder-and-verifier review panel for high-risk work, and hand-offs through a tracking issue. This
 marketplace lists it: `/plugin install lanes@claude-token-policy`.
+
+## Versions
+
+Each version has a [release note](https://github.com/aniteshdharam/claude-token-policy/releases)
+with what changed and why; [CHANGELOG.md](CHANGELOG.md) lists the same changes in brief.
 
 ## License
 
