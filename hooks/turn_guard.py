@@ -25,11 +25,14 @@ def main():
     event = d.get("hook_event_name") or "UserPromptSubmit"
     sid = d.get("session_id") or "unknown"
     latch = cfg.latch_path(sid)
-    off = cfg.autocompact_off()
     off_latch = cfg.off_latch_path(sid)
 
-    # PostToolUse runs on every tool call; once the warnings have fired for this cycle, exit cheaply.
-    if event == "PostToolUse" and os.path.exists(latch) and (not off or os.path.exists(off_latch)):
+    # PostToolUse runs on every tool call; once the warnings have fired for this cycle, exit on two
+    # stat() calls. Otherwise the settings files are read, which is small next to the transcript tail.
+    if event == "PostToolUse" and os.path.exists(latch) and os.path.exists(off_latch):
+        return
+    off = cfg.autocompact_off()
+    if event == "PostToolUse" and os.path.exists(latch) and not off:
         return
     if cfg.already_seen(d):
         return

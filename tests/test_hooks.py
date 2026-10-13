@@ -201,11 +201,21 @@ class TurnGuard(HookCase):
         self.assertIn("154k", o["additionalContext"])
 
     def settings(self, values, project=False):
+        # Managed settings outrank the temporary HOME, so a host that has them cannot run these cases.
+        if any(os.path.exists(p) for p in ("/Library/Application Support/ClaudeCode/managed-settings.json",
+                                           "/etc/claude-code/managed-settings.json")):
+            self.skipTest("host has managed Claude Code settings")
         root = os.path.join(self.base, "proj") if project else self.home
         os.makedirs(os.path.join(root, ".claude"), exist_ok=True)
         with open(os.path.join(root, ".claude", "settings.json"), "w") as f:
             json.dump(values, f)
         return {"CLAUDE_PROJECT_DIR": root} if project else {}
+
+    def test_post_tool_use_is_quiet_once_both_warnings_fired(self):
+        self.settings({"autoCompactEnabled": False})
+        self.out(self.turn(self.transcript(ctx=280000), sid="q"))  # fires both, sets both latches
+        self.assertIsNone(self.out(self.turn(self.transcript(ctx=290000, minutes_ago=90),
+                                             event="PostToolUse", sid="q")))
 
     def test_compaction_switched_off_warns_once_at_any_size(self):
         self.settings({"autoCompactEnabled": False})

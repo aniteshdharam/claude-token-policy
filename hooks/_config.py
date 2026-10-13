@@ -188,11 +188,13 @@ def _parse_window(v):
 
 
 MANAGED_SETTINGS = ("/Library/Application Support/ClaudeCode/managed-settings.json",
-                    "/etc/claude-code/managed-settings.json")
+                    "/etc/claude-code/managed-settings.json",
+                    r"C:\ProgramData\ClaudeCode\managed-settings.json")
 
 
 def settings_paths():
-    """Settings files, highest precedence first: managed, project local, project, user local, user."""
+    """Settings files, highest precedence first: managed, project local, project, user local, user.
+    Settings passed on the command line (--settings) are invisible to a hook and not read."""
     paths = list(MANAGED_SETTINGS)
     proj = os.environ.get("CLAUDE_PROJECT_DIR")
     if proj:
