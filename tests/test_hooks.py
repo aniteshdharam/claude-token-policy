@@ -30,7 +30,8 @@ class HookCase(unittest.TestCase):
 
     def run_hook(self, script, payload, env=None):
         e = {k: v for k, v in os.environ.items()
-             if not k.startswith("TOKEN_POLICY_") and k not in ("CLAUDE_PROJECT_DIR", "TMPDIR", "HOME")}
+             if not k.startswith("TOKEN_POLICY_")
+             and k not in ("CLAUDE_PROJECT_DIR", "TMPDIR", "HOME", "DISABLE_COMPACT", "DISABLE_AUTO_COMPACT")}
         e.update({"HOME": self.home, "TMPDIR": self.tmp})
         e.update(env or {})
         p = subprocess.run([sys.executable, os.path.join(HOOKS, script)], input=json.dumps(payload),
@@ -198,6 +199,46 @@ class TurnGuard(HookCase):
             json.dump({"autoCompactWindow": "200k"}, f)
         o = self.out(self.turn(self.transcript(ctx=160000)))  # 77% of 200k = 154k
         self.assertIn("154k", o["additionalContext"])
+
+    def settings(self, values, project=False):
+        root = os.path.join(self.base, "proj") if project else self.home
+        os.makedirs(os.path.join(root, ".claude"), exist_ok=True)
+        with open(os.path.join(root, ".claude", "settings.json"), "w") as f:
+            json.dump(values, f)
+        return {"CLAUDE_PROJECT_DIR": root} if project else {}
+
+    def test_compaction_switched_off_warns_once_at_any_size(self):
+        self.settings({"autoCompactEnabled": False})
+        o = self.out(self.turn(self.transcript(ctx=20000)))
+        self.assertIn("SWITCHED OFF", o["additionalContext"])
+        self.assertIn("autoCompactEnabled", o["additionalContext"])
+        self.assertIsNone(self.out(self.turn(self.transcript(ctx=20000))))  # once per session
+
+    def test_compaction_off_never_promises_runway(self):
+        self.settings({"autoCompactEnabled": False})
+        text = self.out(self.turn(self.transcript(ctx=280000)))["additionalContext"]
+        self.assertIn("no compaction is coming", text)
+        self.assertNotIn("runway", text)
+
+    def test_compaction_off_by_environment(self):
+        for var, val in (("DISABLE_COMPACT", "1"), ("DISABLE_AUTO_COMPACT", "true")):
+            o = self.out(self.turn(self.transcript(ctx=20000), sid=var, env={var: val}))
+            self.assertIn(var, o["additionalContext"])
+        self.assertIsNone(self.out(self.turn(self.transcript(ctx=20000), sid="zero",
+                                             env={"DISABLE_AUTO_COMPACT": "0"})))
+
+    def test_project_setting_overrides_user_off(self):
+        self.settings({"autoCompactEnabled": False})
+        env = self.settings({"autoCompactEnabled": True}, project=True)
+        text = self.out(self.turn(self.transcript(ctx=280000), env=env))["additionalContext"]
+        self.assertNotIn("SWITCHED OFF", text)
+        self.assertIn("runway", text)
+
+    def test_compaction_off_reaches_post_tool_use_after_the_checkpoint_latch(self):
+        self.out(self.turn(self.transcript(ctx=280000), sid="p"))  # sets the checkpoint latch, compaction on
+        self.settings({"autoCompactEnabled": False})
+        o = self.out(self.turn(self.transcript(ctx=285000), event="PostToolUse", sid="p"))
+        self.assertIn("SWITCHED OFF", o["additionalContext"])
 
     def test_idle_resume_warns(self):
         o = self.out(self.turn(self.transcript(ctx=160000, minutes_ago=90)))

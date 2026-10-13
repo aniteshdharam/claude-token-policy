@@ -129,7 +129,7 @@ subagents from inheriting the top tier.
 | `skills/token-policy` | The rules, written for the model, loaded when it dispatches, forks, reads large files or plans a long session |
 | `hooks/dispatch_guard.py` | Refuses top-tier subagents, forks from the top tier and forks above 100k context; tells the model what to do instead |
 | `hooks/read_guard.py` | Warns on re-reading a file already read this session, and on reading a large file whole. Never blocks |
-| `hooks/turn_guard.py` | Warns before an idle-then-resume cache rewrite, and as context grows towards compaction |
+| `hooks/turn_guard.py` | Warns before an idle-then-resume cache rewrite, as context grows towards compaction, and once per session when automatic compaction is switched off |
 | `hooks/precompact_checkpoint.py` + `session_start_checkpoint.py` | Saves the working state before compaction, re-injects it after, counts compactions and warns after the fourth |
 | `agents/builder.md` | A fast-tier, build-only agent for ordinary building |
 | `scripts/token_census.py` + `/token-census` | Reads your local transcripts and prints the census: spend by tier, largest sessions, re-reads, unnamed dispatches, cache rewrites |

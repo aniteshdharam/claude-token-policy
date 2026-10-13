@@ -25,21 +25,35 @@ def main():
     event = d.get("hook_event_name") or "UserPromptSubmit"
     sid = d.get("session_id") or "unknown"
     latch = cfg.latch_path(sid)
+    off = cfg.autocompact_off()
+    off_latch = cfg.off_latch_path(sid)
 
-    # PostToolUse runs on every tool call; once the warning has fired for this cycle, exit cheaply.
-    if event == "PostToolUse" and os.path.exists(latch):
+    # PostToolUse runs on every tool call; once the warnings have fired for this cycle, exit cheaply.
+    if event == "PostToolUse" and os.path.exists(latch) and (not off or os.path.exists(off_latch)):
         return
     if cfg.already_seen(d):
         return
-    _, ctx, ts = cfg.tail_usage(d.get("transcript_path") or "", main_only=True)
-    if not ctx:
-        return
     window = cfg.compaction_window()
+    msgs = []
+    # Once per session, at any context size: with compaction off, a small-window session hits
+    # the hard limit before any checkpoint line, and a large one re-sends ever more context.
+    if off and not os.path.exists(off_latch):
+        try:
+            open(off_latch, "w").close()
+        except Exception:
+            pass
+        msgs.append(
+            f"Token policy: automatic compaction is SWITCHED OFF ({off}), so this session will not "
+            f"compact at the {window // 1000}k window; context grows to the model's limit and every call "
+            "re-sends all of it. Tell the user in one line that compaction is off and where it is set; do "
+            "not change the setting yourself. Keep a notes or handoff file current, then continue the work.")
+    _, ctx, ts = cfg.tail_usage(d.get("transcript_path") or "", main_only=True)
+    if not ctx and not msgs:
+        return
     trigger = int(window * cfg.TRIGGER_FRACTION)
     checkpoint = int(window * cfg.CHECKPOINT_FRACTION)
     gap = cfg.minutes_since(ts) if ts else None
     k = ctx // 1000
-    msgs = []
     if gap is not None and gap > cfg.idle_minutes() and ctx > cfg.idle_resume_tokens():
         msgs.append(
             f"Token policy: this session sat idle {int(gap)} min at ~{k}k context, so its prompt cache has "
@@ -51,12 +65,18 @@ def main():
             open(latch, "w").close()
         except Exception:
             pass
-        msgs.append(
-            f"Token policy: context is ~{k}k, past the {checkpoint // 1000}k checkpoint line; this session "
-            f"compacts at about {trigger // 1000}k (90% of the {window // 1000}k window), so roughly "
-            f"{max(trigger - ctx, 0) // 1000}k of runway is left. A PreCompact hook will checkpoint the brief, "
-            "the recent narrative and the files already in hand, but it cannot capture a decision you have "
-            "only reasoned about. Write those into a notes or handoff file now, then continue the work.")
+        if off:
+            msgs.append(
+                f"Token policy: context is ~{k}k, past the {checkpoint // 1000}k checkpoint line, and automatic "
+                "compaction is off, so no compaction is coming. Write anything not yet in a notes or handoff "
+                "file now, then continue the work.")
+        else:
+            msgs.append(
+                f"Token policy: context is ~{k}k, past the {checkpoint // 1000}k checkpoint line; this session "
+                f"compacts at about {trigger // 1000}k (90% of the {window // 1000}k window), so roughly "
+                f"{max(trigger - ctx, 0) // 1000}k of runway is left. A PreCompact hook will checkpoint the brief, "
+                "the recent narrative and the files already in hand, but it cannot capture a decision you have "
+                "only reasoned about. Write those into a notes or handoff file now, then continue the work.")
     if msgs:
         print(json.dumps({"hookSpecificOutput": {"hookEventName": event,
                                                  "additionalContext": " ".join(msgs)}}))
