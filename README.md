@@ -1,14 +1,28 @@
 # claude-token-policy
 
+[![tests](https://github.com/aniteshdharam/claude-token-policy/actions/workflows/test.yml/badge.svg)](https://github.com/aniteshdharam/claude-token-policy/actions/workflows/test.yml)
+[![license: MIT](https://img.shields.io/github/license/aniteshdharam/claude-token-policy)](LICENSE)
+[![release](https://img.shields.io/github/v/release/aniteshdharam/claude-token-policy)](https://github.com/aniteshdharam/claude-token-policy/releases)
+
 **Your Claude Code bill is context size × number of calls, not the model you picked.**
 
 This is the token policy our small team runs Claude Code under, packaged as a plugin: a skill
 the model follows, hooks that enforce the rules by machine, and a census script that measures
 your transcripts so you can check the claim against your own usage.
 
+```
+/plugin marketplace add aniteshdharam/claude-token-policy
+/plugin install token-policy@claude-token-policy
+```
+
+The hooks refuse some actions by default. To try the plugin with warnings only, add
+`"TOKEN_POLICY_MODE": "warn"` under `env` in `~/.claude/settings.json`. The rest of the setup is
+under [Install](#install).
+
 ![Claude Code usage, all time: 12,528 sessions, 2,654,822 messages, 394.6B tokens, 145 active days](assets/usage-all-time.png)
 
-One founder's account, as the Claude app counts it: 145 active days, 394.6B tokens.
+The Claude app's own all-time total for one founder's account: 145 active days, 394.6B tokens.
+Read the next paragraph before quoting that figure.
 
 That headline is about 2.4 times the real figure. Claude Code writes one reply as several lines
 (its thinking, its text, each tool call), and the app's total matches counting a reply's tokens
