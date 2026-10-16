@@ -48,7 +48,7 @@ no model and inherited the parent's, often the most expensive tier.
 
 | Measure | Change |
 |---|---|
-| **Average context per model call** | **240k → 165k (31% smaller)** |
+| **Average context per model call** | **240k → 165k (31% smaller; 161k re-counted, see the correction below)** |
 | Model calls per day (a rough proxy for work done) | 32% more |
 | Cost per day (API-equivalent) | 7% lower |
 | Cost per call | $0.19 → $0.13 (29% lower) |
@@ -90,10 +90,11 @@ The policy came out of our own mistakes.
 | Until 5 Sep | No policy. Seven in ten subagents named no model and inherited the parent's, often the top tier. One call carried 963k of context. | Every dispatch names its tier; the top tier is never a subagent |
 | 15 Aug to 5 Sep | Big sessions left idle past an hour re-wrote their whole context on the next prompt, at the cache-write price. | Do not park a big session and come back |
 | 5 Sep | We measured those three weeks: 97.6% of tokens were re-reads; 0.02% were prompts, typed or not. | Context is the bill; work inside 200k |
-| 5 Sep to mid Oct | Context per call fell from 240k to 165k. But sessions told to carry on between tasks became marathons; the longest compacted 31 times. | Replace a session after its fourth compaction |
+| 5 Sep to mid Oct | Context per call fell from 240k to 165k (161k re-counted, [0.1.2](https://github.com/aniteshdharam/claude-token-policy/releases/tag/v0.1.2)). But sessions told to carry on between tasks became marathons; the longest compacted 31 times. | Replace a session after its fourth compaction |
 | Mid Oct | Most of our August transcripts were gone from disk, so the "before" half can no longer be re-run from the files. Claude Code clears old transcripts on its own (see `cleanupPeriodDays`). | Save the census output the day you run it |
 | 13 Oct | Checking the screenshot above against our census showed the app counts a reply once per line it is written in, and our census read some sessions twice ([0.1.2](https://github.com/aniteshdharam/claude-token-policy/releases/tag/v0.1.2)). | Count each reply once, read each file once, and check any headline total against a second count |
 | 13 Oct, night | Automatic compaction was switched off by one settings toggle; nothing logged it, our turn guard missed it, and sessions ran past 600k by morning ([0.1.3](https://github.com/aniteshdharam/claude-token-policy/releases/tag/v0.1.3)). | Check that compaction is on, not just its window; the turn guard now says when it is off |
+| 16 Oct | Set against the four ways a long context fails (poisoning, distraction, confusion, clash), the policy handled distraction well and the other three barely. Our own checkpoint carried the session's statements across compaction unlabelled, and POLICY.md still quoted compaction counts the 0.1.2 correction had withdrawn ([0.1.4](https://github.com/aniteshdharam/claude-token-policy/releases/tag/v0.1.4)). | Check a note before writing it down, rewrite a wrong one rather than append, trim the tools; the checkpoint labels its carried statements as unchecked |
 
 ## The four rules
 
@@ -103,6 +104,11 @@ The policy came out of our own mistakes.
 3. **Every dispatch names its tier.** Judgement → strong; mechanical → fast; ordinary building
    → a fast-tier build agent with a written brief; the top tier is never a subagent.
 4. **Read once.** Then search and read ranges. Subagents return summaries, not transcripts.
+
+A smaller context is also a more reliable one: models use their context less reliably as it
+grows ([Chroma, "Context Rot"](https://trychroma.com/research/context-rot)). So the policy also
+keeps what stays in the window true: check a conclusion before writing it down, rewrite a note
+that turned out wrong instead of appending the fix, and give a session only the tools it needs.
 
 The full policy, including who builds what, review sizing and long-session rules, is in
 [POLICY.md](POLICY.md).
@@ -135,7 +141,7 @@ subagents from inheriting the top tier.
 | `hooks/dispatch_guard.py` | Refuses top-tier subagents, forks from the top tier and forks above 100k context; tells the model what to do instead |
 | `hooks/read_guard.py` | Warns on re-reading a file already read this session, and on reading a large file whole. Never blocks |
 | `hooks/turn_guard.py` | Warns before an idle-then-resume cache rewrite, as context grows towards compaction, and once per session when automatic compaction is switched off |
-| `hooks/precompact_checkpoint.py` + `session_start_checkpoint.py` | Saves the working state before compaction, re-injects it after, counts compactions and warns after the fourth |
+| `hooks/precompact_checkpoint.py` + `session_start_checkpoint.py` | Saves the working state before compaction, re-injects it after with the session's own statements marked as unchecked claims, counts compactions and warns after the fourth |
 | `agents/builder.md` | A fast-tier, build-only agent for ordinary building |
 | `scripts/token_census.py` + `/token-census` | Reads your local transcripts and prints the census: spend by tier, largest sessions, re-reads, unnamed dispatches, cache rewrites |
 | `scripts/statusline.sh` | Shows context in absolute tokens, red past 200k |

@@ -16,10 +16,13 @@ dispatch.
 | Dispatch a subagent | Name its tier. Judgement (review, design, verdict) → `opus`. Mechanical (search, sweep, format, bulk edit) → `sonnet` (`haiku` for yes/no checks). Ordinary building → the `builder` agent with a written brief. Never the top tier as a subagent. |
 | Fork the session | Only below ~100k context, never from the top tier. Otherwise dispatch a fresh agent with a written brief. |
 | Run a review | A fresh agent on the delta, never a fork. Size it to the risk. Re-review only the delta since the last reviewed commit. |
-| Read a file | Read it once. After that, search it and read the changed range. Over ~60 KB: search first, then read ranges. |
+| Read a file | Read it once. After that, search it and read the changed range (after a compaction, the range the next step needs). Over ~60 KB: search first, then read ranges. |
 | Brief a subagent | State the delta, the files, the question, the tier and the size of the answer you want back. Ask for a bounded summary, never a transcript. |
 | Leave a big session idle | Don't. Above ~150k, an hour idle loses the cache and the next prompt re-writes everything. Finish, write the hand-off, end. |
 | Switch model mid-session | Don't. It re-writes the cache. Pick the tier at the start. |
+| Write a conclusion into a hand-off, journal or memory | Check it first (a test, a command, the quoted line) and say how; otherwise mark it unchecked. Your own notes come back reading as fact. |
+| Correct a note that turned out wrong | Rewrite or delete the old note; never leave both versions for the next reader. |
+| Start a session or pick an agent | Switch off MCP servers the session will not use (`/mcp`); dispatch an agent whose file lists only the tools its job needs. |
 | Pass the fourth compaction | At the next natural break (task done, PR opened), write a hand-off note and continue in a fresh session from it. Never stop mid-task for this. |
 
 ## Who builds

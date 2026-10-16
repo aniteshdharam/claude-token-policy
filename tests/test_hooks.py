@@ -307,6 +307,15 @@ class Checkpoint(HookCase):
         self.assertIn("python3 -m unittest", text)
         self.assertIn("Compaction 1 of this session", text)
 
+    def test_checkpoint_marks_the_sessions_own_statements_as_unchecked(self):
+        # A wrong conclusion written before compaction must not come back reading as fact.
+        self.precompact("sess-v", self.brief_transcript())
+        text = self.out(self.session_start("sess-v"))["additionalContext"]
+        self.assertIn("Working on the parser now.", text)
+        self.assertIn("claims, not checked facts", text)
+        self.assertIn("read the range before acting on what you remember of it", text)
+        self.assertNotIn("do not blindly re-read", text)
+
     def test_session_start_is_silent_unless_compact(self):
         self.precompact("sess-b", self.brief_transcript())
         for source in ("startup", "resume", "clear"):
