@@ -34,7 +34,7 @@ named no model, and they quietly ran on whatever the parent ran, often the most 
    human's own spec and advice sessions and for one verdict per review round on a critical
    task. It is never a subagent tier, never forked, never the bulk of a review.
 4. **Read once.** Read a file once per session; after that, search it and read the changed
-   range. Subagents return a summary sized to the question, never a transcript. Large files
+   range (after a compaction, the range the next step needs). Subagents return a summary sized to the question, never a transcript. Large files
    are read in ranges after a search unless the task is to edit them throughout.
 
 ## Long-running sessions
@@ -61,9 +61,9 @@ correct. The failure names are from [Drew Breunig, "How Long Contexts Fail"](htt
 - **Rewrite a superseded note; do not append the correction (clash).** When a note turns out
   wrong, edit or delete it, so the old and new versions are never both in the window. Rewrite
   the hand-off to the current state of the work rather than adding to its end.
-- **Give a session only the tools its task needs (confusion).** Every tool and server description
-  sits in the context whether it is used or not, and a long tool list makes choosing the right
-  one harder. Switch off the MCP servers a session does not need (`/mcp`); a subagent's file
+- **Give a session only the tools its task needs (confusion).** Every connected tool sits in the
+  context whether it is used or not: its name and its server's instructions always, its full
+  description too when tool search is off. A long tool list makes choosing the right one harder. Switch off the MCP servers a session does not need (`/mcp`); a subagent's file
   lists only the tools its job calls for, as `agents/builder.md` does.
 
 ## Who builds

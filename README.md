@@ -48,7 +48,7 @@ no model and inherited the parent's, often the most expensive tier.
 
 | Measure | Change |
 |---|---|
-| **Average context per model call** | **240k → 165k (31% smaller)** |
+| **Average context per model call** | **240k → 165k (31% smaller; 161k re-counted, see the correction below)** |
 | Model calls per day (a rough proxy for work done) | 32% more |
 | Cost per day (API-equivalent) | 7% lower |
 | Cost per call | $0.19 → $0.13 (29% lower) |
@@ -90,7 +90,7 @@ The policy came out of our own mistakes.
 | Until 5 Sep | No policy. Seven in ten subagents named no model and inherited the parent's, often the top tier. One call carried 963k of context. | Every dispatch names its tier; the top tier is never a subagent |
 | 15 Aug to 5 Sep | Big sessions left idle past an hour re-wrote their whole context on the next prompt, at the cache-write price. | Do not park a big session and come back |
 | 5 Sep | We measured those three weeks: 97.6% of tokens were re-reads; 0.02% were prompts, typed or not. | Context is the bill; work inside 200k |
-| 5 Sep to mid Oct | Context per call fell from 240k to 165k. But sessions told to carry on between tasks became marathons; the longest compacted 31 times. | Replace a session after its fourth compaction |
+| 5 Sep to mid Oct | Context per call fell from 240k to 165k (161k re-counted, [0.1.2](https://github.com/aniteshdharam/claude-token-policy/releases/tag/v0.1.2)). But sessions told to carry on between tasks became marathons; the longest compacted 31 times. | Replace a session after its fourth compaction |
 | Mid Oct | Most of our August transcripts were gone from disk, so the "before" half can no longer be re-run from the files. Claude Code clears old transcripts on its own (see `cleanupPeriodDays`). | Save the census output the day you run it |
 | 13 Oct | Checking the screenshot above against our census showed the app counts a reply once per line it is written in, and our census read some sessions twice ([0.1.2](https://github.com/aniteshdharam/claude-token-policy/releases/tag/v0.1.2)). | Count each reply once, read each file once, and check any headline total against a second count |
 | 13 Oct, night | Automatic compaction was switched off by one settings toggle; nothing logged it, our turn guard missed it, and sessions ran past 600k by morning ([0.1.3](https://github.com/aniteshdharam/claude-token-policy/releases/tag/v0.1.3)). | Check that compaction is on, not just its window; the turn guard now says when it is off |
