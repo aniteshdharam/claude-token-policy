@@ -3,6 +3,19 @@
 In brief. Each version's [release note](https://github.com/aniteshdharam/claude-token-policy/releases)
 says why as well.
 
+## 0.1.4
+
+- Checkpoint: the session's carried-forward statements are labelled as its own claims, to be
+  checked before they are built on, and the "files already in hand" list no longer says "do not
+  blindly re-read"; it says to read the range before acting on a remembered detail. A wrong
+  conclusion written before compaction no longer comes back reading as fact. New test in
+  `tests/test_hooks.py`.
+- Policy and skill: a section on keeping the context true as well as small: check a conclusion
+  before writing it into a hand-off or memory, rewrite a superseded note instead of appending
+  the correction, give a session only the tools it needs.
+- POLICY.md: the long-session rule now quotes the corrected figure (31 compactions), not the 70
+  and 104 the 0.1.2 correction withdrew.
+
 ## 0.1.3
 
 - Turn guard: says once per session, at any context size, when automatic compaction is switched

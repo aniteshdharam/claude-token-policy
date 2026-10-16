@@ -20,6 +20,9 @@ dispatch.
 | Brief a subagent | State the delta, the files, the question, the tier and the size of the answer you want back. Ask for a bounded summary, never a transcript. |
 | Leave a big session idle | Don't. Above ~150k, an hour idle loses the cache and the next prompt re-writes everything. Finish, write the hand-off, end. |
 | Switch model mid-session | Don't. It re-writes the cache. Pick the tier at the start. |
+| Write a conclusion into a hand-off, journal or memory | Check it first (a test, a command, the quoted line) and say how; otherwise mark it unchecked. Your own notes come back reading as fact. |
+| Correct a note that turned out wrong | Rewrite or delete the old note; never leave both versions for the next reader. |
+| Start a session or brief an agent | Give it only the tools the task needs; switch off MCP servers it will not use. |
 | Pass the fourth compaction | At the next natural break (task done, PR opened), write a hand-off note and continue in a fresh session from it. Never stop mid-task for this. |
 
 ## Who builds

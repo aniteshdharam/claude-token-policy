@@ -44,8 +44,27 @@ compaction is a lossy summary, and the loss compounds. **After the fourth compac
 the session** at the next natural break (a task finished, a pull request opened): write the
 hand-off note, start a fresh session from it. Never stop mid-task to do it.
 
-We added this rule after the measurement below found sessions running 70 and 104 compactions.
-Each call in them was cheap; the sessions simply never ended.
+We added this rule after our census found a session that had compacted 31 times. Each call in
+it was cheap; the session simply never ended.
+
+## Keep the context true, not just small
+
+A smaller context is cheaper, and it is also more reliable: models use their context less
+reliably as it grows, even on simple tasks ([Chroma, "Context Rot", 2025](https://trychroma.com/research/context-rot)).
+Compaction and fresh sessions keep the window small. Three habits keep what is left in it
+correct. The failure names are from [Drew Breunig, "How Long Contexts Fail"](https://www.dbreunig.com/2025/06/22/how-contexts-fail-and-how-to-fix-them.html).
+
+- **Check a conclusion before writing it down (poisoning).** A note in the hand-off, journal or
+  memory outlives every compaction and every fresh session, and the model reads its own notes
+  as fact. Before a conclusion goes in, check it against something real (a test, a command, the
+  quoted line) and write down how it was checked, or mark it unchecked.
+- **Rewrite a superseded note; do not append the correction (clash).** When a note turns out
+  wrong, edit or delete it, so the old and new versions are never both in the window. Rewrite
+  the hand-off to the current state of the work rather than adding to its end.
+- **Give a session only the tools its task needs (confusion).** Every tool and server description
+  sits in the context whether it is used or not, and a long tool list makes choosing the right
+  one harder. Switch off the MCP servers a session does not need (`/mcp`); a subagent's file
+  lists only the tools its job calls for, as `agents/builder.md` does.
 
 ## Who builds
 
@@ -92,7 +111,7 @@ A policy that relies on memory decays. Ours held because the defaults and hooks 
 | No top-tier subagents, no forks from the top tier, no forks above 100k | `dispatch_guard` hook |
 | Re-read and whole-large-file warnings | `read_guard` hook (warns, never blocks) |
 | Idle-resume and context-size warnings | `turn_guard` hook |
-| Compaction keeps working state; replace after the fourth | `precompact_checkpoint` + `session_start_checkpoint` hooks |
+| Compaction keeps working state, labels the session's own claims as unchecked; replace after the fourth | `precompact_checkpoint` + `session_start_checkpoint` hooks |
 | Context shown in absolute tokens | status line |
 
 ## Re-measure

@@ -188,10 +188,16 @@ def render(d, brief, narrative, paths, cmds, todos, last_user):
                 mark = {"completed": "x", "in_progress": ">"}.get(t.get("status"), " ")
                 out.append(f"- [{mark}] {t.get('content') or t.get('activeForm') or ''}")
     if narrative:
-        out += ["", "## What the session was saying (most recent last)", ""]
+        # The session's own words carry its mistakes too. Unlabelled, a wrong conclusion written
+        # before compaction comes back reading as fact (context poisoning).
+        out += ["", "## What the session was saying (most recent last)", "",
+                "These are the session's own claims, not checked facts. Check one against the file, "
+                "the test or the command output before building on it.", ""]
         out += [f"{i}. {t}" for i, t in enumerate(narrative[-MAX_NARRATIVE:], 1)]
     if paths:
-        out += ["", "## Files already in hand (read or edited before compaction, do not blindly re-read)", ""]
+        out += ["", "## Files already in hand (read or edited before compaction)", "",
+                "Do not re-read these whole to rebuild context. Where the next step depends on a "
+                "file's content, search it and read the range before acting on what you remember of it.", ""]
         out += [f"- `{p}`" for p in paths[-MAX_PATHS:]]
     if cmds:
         out += ["", "## Recent commands", "", "```"]

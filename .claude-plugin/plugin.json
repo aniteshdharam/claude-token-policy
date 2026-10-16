@@ -1,6 +1,6 @@
 {
   "name": "token-policy",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Keeps Claude Code token spend in check: tier rules for subagents and forks, read once and idle-cache warnings, pre-compaction checkpoints, a token census and a context status line.",
   "author": {
     "name": "aniteshdharam"
