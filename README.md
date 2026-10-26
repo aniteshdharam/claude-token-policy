@@ -95,6 +95,7 @@ The policy came out of our own mistakes.
 | 13 Oct | Checking the screenshot above against our census showed the app counts a reply once per line it is written in, and our census read some sessions twice ([0.1.2](https://github.com/aniteshdharam/claude-token-policy/releases/tag/v0.1.2)). | Count each reply once, read each file once, and check any headline total against a second count |
 | 13 Oct, night | Automatic compaction was switched off by one settings toggle; nothing logged it, our turn guard missed it, and sessions ran past 600k by morning ([0.1.3](https://github.com/aniteshdharam/claude-token-policy/releases/tag/v0.1.3)). | Check that compaction is on, not just its window; the turn guard now says when it is off |
 | 16 Oct | Set against the four ways a long context fails (poisoning, distraction, confusion, clash), the policy handled distraction well and the other three barely. Our own checkpoint carried the session's statements across compaction unlabelled, and POLICY.md still quoted compaction counts the 0.1.2 correction had withdrawn ([0.1.4](https://github.com/aniteshdharam/claude-token-policy/releases/tag/v0.1.4)). | Check a note before writing it down, rewrite a wrong one rather than append, trim the tools; the checkpoint labels its carried statements as unchecked |
+| 26 Oct | A week's count of our helper agents: builders ran where the policy put them, but 266 reviewers ran at `xhigh` because nothing set theirs (an agent with no effort of its own takes the one set for its model). They wrote more than half of all helper output ([0.1.5](https://github.com/aniteshdharam/claude-token-policy/releases/tag/v0.1.5)). | Review effort follows risk: the `reviewer` agent at high effort for ordinary work, `xhigh` for a critical surface |
 
 ## The four rules
 
@@ -143,6 +144,7 @@ subagents from inheriting the top tier.
 | `hooks/turn_guard.py` | Warns before an idle-then-resume cache rewrite, as context grows towards compaction, and once per session when automatic compaction is switched off |
 | `hooks/precompact_checkpoint.py` + `session_start_checkpoint.py` | Saves the working state before compaction, re-injects it after with the session's own statements marked as unchecked claims, counts compactions and warns after the fourth |
 | `agents/builder.md` | A fast-tier, build-only agent for ordinary building |
+| `agents/reviewer.md` | A strong-tier, read-only review agent at high effort, for reviews of ordinary work |
 | `scripts/token_census.py` + `/token-census` | Reads your local transcripts and prints the census: spend by tier, largest sessions, re-reads, unnamed dispatches, cache rewrites |
 | `scripts/statusline.sh` | Shows context in absolute tokens, red past 200k |
 
