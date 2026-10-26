@@ -35,8 +35,10 @@ named no model, and they quietly ran on whatever the parent ran, often the most 
    task. It is never a subagent tier, never forked, never the bulk of a review.
    Review effort follows risk: a review of ordinary work runs at high effort through the
    `reviewer` agent; a review of a critical surface (the list under Who builds) keeps the
-   strong tier's top everyday effort. An agent with no effort of its own takes the one your
-   settings give its model, so a reviewer sent out unnamed runs at the main session's level.
+   strong tier's top everyday effort, `xhigh`, the level below `max`. An agent with no
+   effort of its own runs at the level your settings give its model (that model's own
+   setting, else the global one), not at the main session's, so a review sent out as a
+   general `opus` agent runs at whatever your settings give `opus`.
 4. **Read once.** Read a file once per session; after that, search it and read the changed
    range (after a compaction, the range the next step needs). Subagents return a summary sized to the question, never a transcript. Large files
    are read in ranges after a search unless the task is to edit them throughout.
