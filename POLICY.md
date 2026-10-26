@@ -33,6 +33,10 @@ named no model, and they quietly ran on whatever the parent ran, often the most 
    building gets the fast tier at high effort with a written brief. The top tier is for the
    human's own spec and advice sessions and for one verdict per review round on a critical
    task. It is never a subagent tier, never forked, never the bulk of a review.
+   Review effort follows risk: a review of ordinary work runs at high effort through the
+   `reviewer` agent; a review of a critical surface (the list under Who builds) keeps the
+   strong tier's top everyday effort. An agent with no effort of its own takes the one your
+   settings give its model, so a reviewer sent out unnamed runs at the main session's level.
 4. **Read once.** Read a file once per session; after that, search it and read the changed
    range (after a compaction, the range the next step needs). Subagents return a summary sized to the question, never a transcript. Large files
    are read in ranges after a search unless the task is to edit them throughout.
@@ -64,7 +68,7 @@ correct. The failure names are from [Drew Breunig, "How Long Contexts Fail"](htt
 - **Give a session only the tools its task needs (confusion).** Every connected tool sits in the
   context whether it is used or not: its name and its server's instructions always, its full
   description too when tool search is off. A long tool list makes choosing the right one harder. Switch off the MCP servers a session does not need (`/mcp`); a subagent's file
-  lists only the tools its job calls for, as `agents/builder.md` does.
+  lists only the tools its job calls for, as `agents/builder.md` and `agents/reviewer.md` do.
 
 ## Who builds
 

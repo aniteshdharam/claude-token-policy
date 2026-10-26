@@ -3,6 +3,16 @@
 In brief. Each version's [release note](https://github.com/aniteshdharam/claude-token-policy/releases)
 says why as well.
 
+## 0.1.5
+
+- New `agents/reviewer.md`: the strong tier at high effort, read-only, for reviews of ordinary
+  work (a fresh read of a delta, a re-read after a fix, the security read). A review of a
+  critical surface keeps the top everyday effort. Why: a week's count of the helper agents on
+  one machine found 266 reviewers at the top setting with no rule behind it (an agent with no
+  effort of its own takes the one set for its model), more than half of all helper output; on
+  the rest, sessions picked medium, high or max as they went.
+- Policy and skill: review effort follows risk, in rule 3 and the review row.
+
 ## 0.1.4
 
 - Checkpoint: the session's carried-forward statements are labelled as its own claims, to be
